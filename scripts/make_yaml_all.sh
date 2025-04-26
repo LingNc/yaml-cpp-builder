@@ -8,7 +8,7 @@ VERSION="1.0.0"                   # 版本号
 # 目录配置
 YAML_SRC="yaml-cpp"               # YAML-CPP 源码目录
 TEMP_DIR="temp"                   # 临时文件目录
-EXT_DIR="ext"                     # 扩展库目录（存放头文件）
+INCLUDE_DIR="include"             # 头文件输出目录（修改为统一使用include目录）
 
 # 文件名配置
 ALL_HEADER="yaml-cpp.hpp"         # 含实现的合并头文件名
@@ -43,14 +43,14 @@ OUT="${TEMP_DIR}/${ALL_HEADER}"
 echo "===== 开始生成 yaml-cpp 全合并单头文件 ====="
 echo "源码目录: ${YAML_SRC}"
 echo "临时输出: ${OUT}"
-echo "最终输出: ${EXT_DIR}/${ALL_HEADER}"
+echo "最终输出: ${INCLUDE_DIR}/${ALL_HEADER}"
 echo "版本: ${VERSION} (原版 YAML-CPP: ${YAML_VERSION})"
 echo "构建日期: ${BUILD_DATE}"
 echo "构建系统: ${BUILD_OS}"
 
 # 确保目录存在
 mkdir -p "${TEMP_DIR}"
-mkdir -p "${EXT_DIR}"
+mkdir -p "${INCLUDE_DIR}"
 
 # 初始化输出文件
 > "$OUT"
@@ -168,8 +168,8 @@ grep -n "Cannot find include" "$OUT" || echo "全部 include 展开成功!"
 
 # 复制到目标目录
 echo "正在复制到目标位置..."
-cp "${OUT}" "${EXT_DIR}/${ALL_HEADER}"
+cp "${OUT}" "${INCLUDE_DIR}/${ALL_HEADER}"
 
 echo "===== 生成完成 ====="
-echo "全合并头文件: ${EXT_DIR}/${ALL_HEADER}"
+echo "全合并头文件: ${INCLUDE_DIR}/${ALL_HEADER}"
 echo "使用方法: #include \"${ALL_HEADER}\" (无需链接静态库)"

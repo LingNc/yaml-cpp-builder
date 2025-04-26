@@ -8,7 +8,7 @@ VERSION="1.0.0"                   # 版本号
 # 目录配置
 YAML_SRC="yaml-cpp"               # YAML-CPP 源码目录
 TEMP_DIR="temp"                   # 临时文件目录
-EXT_DIR="ext"                     # 扩展库目录（存放头文件）
+INCLUDE_DIR="include"             # 头文件输出目录（更改为统一使用include目录）
 LIB_DIR="lib"                     # 库文件目录（存放静态库）
 
 # 文件名配置
@@ -90,12 +90,12 @@ SEARCH_PATHS=(
 )
 
 # 输出文件路径
-OUT="${EXT_DIR}/${HEADER_FILE}"
+OUT="${INCLUDE_DIR}/${HEADER_FILE}"
 #====== 配置结束 ======
 
 echo "===== 开始构建 yaml-cpp 头文件和静态库 ====="
 echo "源码目录: ${YAML_SRC}"
-echo "头文件输出: ${EXT_DIR}/${HEADER_FILE}"
+echo "头文件输出: ${INCLUDE_DIR}/${HEADER_FILE}"
 if [ "$BUILD_RELEASE" = true ]; then
     echo "发布版静态库输出: ${LIB_DIR}/${LIB_FILE}"
 fi
@@ -107,7 +107,7 @@ echo "构建日期: ${BUILD_DATE}"
 echo "构建系统: ${BUILD_OS}"
 
 # 确保目录存在
-mkdir -p "${EXT_DIR}"
+mkdir -p "${INCLUDE_DIR}"
 mkdir -p "${LIB_DIR}"
 
 # 第1步：生成合并的头文件
@@ -293,7 +293,7 @@ if [ "$BUILD_DEBUG" = true ]; then
 fi
 
 echo "===== 构建完成 ====="
-echo "头文件: ${EXT_DIR}/${HEADER_FILE}"
+echo "头文件: ${INCLUDE_DIR}/${HEADER_FILE}"
 
 # 根据构建情况显示适当的信息
 if [ "$BUILD_RELEASE" = true ] && [ "$BUILD_DEBUG" = true ]; then

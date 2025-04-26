@@ -4,10 +4,10 @@
 // 根据构建方式选择正确的头文件
 #ifdef USE_MERGED_HEADER
 // 使用合并单头文件版本
-#   include "../ext/yaml-cpp.hpp"
+#   include "../include/yaml-cpp.hpp"
 #else
 // 使用静态库版本
-#   include "../ext/yaml.hpp"
+#   include "../include/yaml.hpp"
 #endif
 
 int main() {
