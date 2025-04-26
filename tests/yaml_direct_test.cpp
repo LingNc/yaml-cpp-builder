@@ -4,20 +4,20 @@
 // 根据构建方式选择正确的头文件
 #ifdef USE_MERGED_HEADER
 // 使用合并单头文件版本
-#include "../include/yaml-cpp.hpp"
+#   include "../ext/yaml-cpp.hpp"
 #else
 // 使用静态库版本
-#include "../include/yaml-cpp/yaml.h"
+#   include "../ext/yaml.hpp"
 #endif
 
 int main() {
     try {
         std::cout << "=== 直接使用YAML-CPP库测试 ===" << std::endl;
-#ifdef USE_MERGED_HEADER
+#   ifdef USE_MERGED_HEADER
         std::cout << "使用模式: 合并单头文件版本" << std::endl;
-#else
+#   else
         std::cout << "使用模式: 静态库版本" << std::endl;
-#endif
+#   endif
 
         // 非常简单的YAML字符串
         std::string yaml_str = "test: 123";

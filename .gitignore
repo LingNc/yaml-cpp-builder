@@ -1,0 +1,18 @@
+*
+!*/
+
+
+!Makefile
+!LICENSE
+!.gitignore
+
+!install.sh
+!scripts/*.sh
+
+!*.md
+# !ext/*.hpp
+# !lib/*.a
+
+!tests/*.cpp
+
+yaml-cpp/
