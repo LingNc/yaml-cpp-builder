@@ -1,11 +1,26 @@
 # YAML-CPP 构建工具
 
-[![Build and Test](https://github.com/username/yaml-cpp-builder/actions/workflows/ci.yml/badge.svg)](https://github.com/username/yaml-cpp-builder/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Platform](https://img.shields.io/badge/platform-linux%20%7C%20macos%20%7C%20windows-lightgrey)]()
 
 本项目提供了从 yaml-cpp 源码生成不同形式的单文件版 YAML 库的工具。
 由于 yaml-cpp 的仓库配置说明不清楚，而且不方便使用和安装，故诞生此工具库。
+
+我们已经发布了一些预构建的文件到release，可以直接使用，无需自行构建。
+
+#### 单头文件版本
+适用于快速集成和简单项目
+
+  - **yaml-cpp.hpp** - 合并所有依赖的单头文件版本，使用时只需包含此文件
+
+
+#### 静态库版本（也可以使用动态库）
+适用于需要高性能和更小二进制体积的项目
+
+  - **yaml.hpp** - 静态库使用的头文件
+  - **libyaml.a** - 针对生产环境优化的静态库（Release版本）
+  - **libyaml-debug.a** - 包含调试信息的静态库（Debug版本）
+
 
 ## 功能特点
 
@@ -80,7 +95,7 @@ chmod +x scripts/make_yaml_header.sh
 
 **在项目中使用：**
 ```cpp
-#include "yaml.hpp"  // 在 ext 目录中
+#include "yaml.hpp"  // 在 include 目录中
 
 // 编译时需链接静态库
 // g++ your_file.cpp -o your_program -Iext -Llib -lyaml
@@ -106,7 +121,7 @@ chmod +x scripts/make_yaml_all.sh
 
 **在项目中使用：**
 ```cpp
-#include "yaml-cpp.hpp"  // 在 ext 目录中
+#include "yaml-cpp.hpp"  // 在 include 目录中
 
 // 无需链接额外的库
 // g++ your_file.cpp -o your_program -Iext
@@ -119,7 +134,24 @@ chmod +x scripts/make_yaml_all.sh
 
 ## 安装
 
-您可以使用提供的安装脚本将构建好的文件安装到系统目录：
+您可以使用以下两种方式之一将构建好的文件安装到系统目录：
+
+### 使用 make install（推荐）
+
+使用 Makefile 中的 install 目标可以轻松安装到系统或自定义目录：
+
+```bash
+# 构建所有版本并安装到默认位置（/usr/local）
+# 需要管理员权限
+sudo make install
+
+# 或安装到自定义目录
+make install PREFIX=/path/to/custom/dir
+```
+
+### 使用安装脚本
+
+您也可以使用提供的安装脚本：
 
 ```bash
 # 构建所有版本

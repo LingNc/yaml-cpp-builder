@@ -15,16 +15,24 @@ LIB_DIR="lib"                     # 库文件目录（存放静态库）
 HEADER_FILE="yaml.hpp"           # 合并后的头文件名
 LIB_FILE="libyaml.a"             # 静态库文件名
 DEBUG_LIB_FILE="libyaml-debug.a" # 调试版静态库文件名
+SHARED_LIB_FILE="libyaml.so"     # 动态库文件名
+SHARED_DEBUG_LIB_FILE="libyaml-debug.so" # 调试版动态库文件名
 
 # 构建配置
 YAML_BUILD="${YAML_SRC}/build"    # 构建目录
 YAML_DEBUG_BUILD="${YAML_SRC}/build-debug" # 调试版构建目录
+YAML_SHARED_BUILD="${YAML_SRC}/build-shared" # 动态库构建目录
+YAML_SHARED_DEBUG_BUILD="${YAML_SRC}/build-shared-debug" # 动态库调试版构建目录
 YAML_LIB="libyaml-cpp.a"          # 构建生成的原始静态库名
 YAML_DEBUG_LIB="libyaml-cppd.a"   # 构建生成的原始调试版静态库名
+YAML_SHARED_LIB="libyaml-cpp.so"  # 构建生成的原始动态库名
+YAML_SHARED_DEBUG_LIB="libyaml-cppd.so" # 构建生成的原始调试版动态库名
 
 # 构建选项配置
-BUILD_RELEASE=true  # 是否构建发布版
-BUILD_DEBUG=true    # 是否构建调试版
+BUILD_RELEASE=true    # 是否构建发布版
+BUILD_DEBUG=true      # 是否构建调试版
+BUILD_STATIC=true     # 是否构建静态库
+BUILD_SHARED=false    # 是否构建动态库
 
 # 处理命令行参数
 while [[ "$#" -gt 0 ]]; do
@@ -41,6 +49,24 @@ while [[ "$#" -gt 0 ]]; do
             BUILD_DEBUG=true
             BUILD_RELEASE=true
             ;;
+        --shared)
+            BUILD_SHARED=true
+            ;;
+        --static)
+            BUILD_STATIC=true
+            ;;
+        --only-shared)
+            BUILD_SHARED=true
+            BUILD_STATIC=false
+            ;;
+        --only-static)
+            BUILD_SHARED=false
+            BUILD_STATIC=true
+            ;;
+        --all-types)
+            BUILD_SHARED=true
+            BUILD_STATIC=true
+            ;;
         -h|--help)
             echo "用法: $0 [选项]"
             echo "选项:"
@@ -48,6 +74,11 @@ while [[ "$#" -gt 0 ]]; do
             echo "  --only-release  同 --no-debug"
             echo "  --only-debug    只构建调试版本，不构建发布版"
             echo "  --all           构建发布版和调试版（默认行为）"
+            echo "  --shared        构建动态库（与静态库一起）"
+            echo "  --static        构建静态库（默认行为）"
+            echo "  --only-shared   只构建动态库，不构建静态库"
+            echo "  --only-static   只构建静态库，不构建动态库（默认行为）"
+            echo "  --all-types     构建静态库和动态库"
             echo "  -h, --help      显示此帮助信息"
             exit 0
             ;;
@@ -63,6 +94,11 @@ done
 # 验证构建选项
 if [[ "$BUILD_RELEASE" == "false" && "$BUILD_DEBUG" == "false" ]]; then
     echo "错误: 至少需要构建一个版本（发布版或调试版）"
+    exit 1
+fi
+
+if [[ "$BUILD_STATIC" == "false" && "$BUILD_SHARED" == "false" ]]; then
+    echo "错误: 至少需要构建一种类型（静态库或动态库）"
     exit 1
 fi
 
@@ -240,7 +276,7 @@ echo "检查未能展开的 include:"
 grep -n "未找到" "$OUT" || echo "全部头文件展开成功!"
 
 # 第2步：如果需要，编译发布版静态库
-if [ "$BUILD_RELEASE" = true ]; then
+if [ "$BUILD_RELEASE" = true ] && [ "$BUILD_STATIC" = true ]; then
     echo "===== 开始编译 yaml-cpp 发布版静态库 ====="
     mkdir -p ${YAML_BUILD}
     cd ${YAML_BUILD}
@@ -260,7 +296,7 @@ if [ "$BUILD_RELEASE" = true ]; then
 fi
 
 # 第3步：如果需要，编译调试版静态库
-if [ "$BUILD_DEBUG" = true ]; then
+if [ "$BUILD_DEBUG" = true ] && [ "$BUILD_STATIC" = true ]; then
     echo "===== 开始编译 yaml-cpp 调试版静态库 ====="
     mkdir -p ${YAML_DEBUG_BUILD}
     cd ${YAML_DEBUG_BUILD}
@@ -292,18 +328,95 @@ if [ "$BUILD_DEBUG" = true ]; then
     fi
 fi
 
+# 第4步：如果需要，编译发布版动态库
+if [ "$BUILD_RELEASE" = true ] && [ "$BUILD_SHARED" = true ]; then
+    echo "===== 开始编译 yaml-cpp 发布版动态库 ====="
+    mkdir -p ${YAML_SHARED_BUILD}
+    cd ${YAML_SHARED_BUILD}
+
+    # 配置构建（生成动态库）
+    echo "配置 CMake 构建..."
+    cmake -DYAML_BUILD_SHARED_LIBS=ON -DYAML_CPP_BUILD_TESTS=OFF -DYAML_CPP_BUILD_TOOLS=OFF -DCMAKE_BUILD_TYPE=Release ..
+
+    # 编译库
+    echo "编译 yaml-cpp 动态库..."
+    make -j$(nproc)
+
+    # 复制动态库到 lib 目录
+    cd ../..
+    echo "复制动态库到 ${LIB_DIR}/${SHARED_LIB_FILE}..."
+    # 查找最新的动态库文件（版本可能有差异）
+    FOUND_SO=$(find "${YAML_SHARED_BUILD}" -name "libyaml-cpp.so*" -type f | sort | head -1)
+    if [ -n "$FOUND_SO" ]; then
+        echo "找到动态库文件: $FOUND_SO"
+        cp "$FOUND_SO" "${LIB_DIR}/${SHARED_LIB_FILE}"
+    else
+        echo "错误: 在目录 ${YAML_SHARED_BUILD} 中找不到动态库文件"
+        find "${YAML_SHARED_BUILD}" -type f -name "*.so*" || echo "未找到任何.so文件"
+        exit 1
+    fi
+fi
+
+# 第5步：如果需要，编译调试版动态库
+if [ "$BUILD_DEBUG" = true ] && [ "$BUILD_SHARED" = true ]; then
+    echo "===== 开始编译 yaml-cpp 调试版动态库 ====="
+    mkdir -p ${YAML_SHARED_DEBUG_BUILD}
+    cd ${YAML_SHARED_DEBUG_BUILD}
+
+    # 配置构建（生成调试版动态库）
+    echo "配置 CMake 调试版构建..."
+    cmake -DYAML_BUILD_SHARED_LIBS=ON -DYAML_CPP_BUILD_TESTS=OFF -DYAML_CPP_BUILD_TOOLS=OFF -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_FLAGS="-D_GLIBCXX_DEBUG" ..
+
+    # 编译库
+    echo "编译 yaml-cpp 调试版动态库..."
+    make -j$(nproc)
+
+    # 复制调试版动态库到 lib 目录
+    cd ../..
+    echo "复制调试版动态库到 ${LIB_DIR}/${SHARED_DEBUG_LIB_FILE}..."
+    # 查找最新的调试版动态库文件（版本可能有差异）
+    FOUND_SO_DEBUG=$(find "${YAML_SHARED_DEBUG_BUILD}" -name "libyaml-cpp*.so*" -type f | sort | head -1)
+    if [ -n "$FOUND_SO_DEBUG" ]; then
+        echo "找到调试版动态库文件: $FOUND_SO_DEBUG"
+        cp "$FOUND_SO_DEBUG" "${LIB_DIR}/${SHARED_DEBUG_LIB_FILE}"
+    else
+        echo "错误: 在目录 ${YAML_SHARED_DEBUG_BUILD} 中找不到调试版动态库文件"
+        find "${YAML_SHARED_DEBUG_BUILD}" -type f -name "*.so*" || echo "未找到任何.so文件"
+        exit 1
+    fi
+fi
+
 echo "===== 构建完成 ====="
 echo "头文件: ${INCLUDE_DIR}/${HEADER_FILE}"
 
-# 根据构建情况显示适当的信息
-if [ "$BUILD_RELEASE" = true ] && [ "$BUILD_DEBUG" = true ]; then
-    echo "发布版静态库: ${LIB_DIR}/${LIB_FILE}"
-    echo "调试版静态库: ${LIB_DIR}/${DEBUG_LIB_FILE}"
-    echo "使用方法: #include \"${HEADER_FILE}\" 并链接 ${LIB_FILE} (发布版) 或 ${DEBUG_LIB_FILE} (调试版)"
-elif [ "$BUILD_RELEASE" = true ]; then
-    echo "发布版静态库: ${LIB_DIR}/${LIB_FILE}"
-    echo "使用方法: #include \"${HEADER_FILE}\" 并链接 ${LIB_FILE}"
-elif [ "$BUILD_DEBUG" = true ]; then
-    echo "调试版静态库: ${LIB_DIR}/${DEBUG_LIB_FILE}"
-    echo "使用方法: #include \"${HEADER_FILE}\" 并链接 ${DEBUG_LIB_FILE}"
+# 显示构建信息
+if [ "$BUILD_STATIC" = true ]; then
+    if [ "$BUILD_RELEASE" = true ]; then
+        echo "发布版静态库: ${LIB_DIR}/${LIB_FILE}"
+    fi
+    if [ "$BUILD_DEBUG" = true ]; then
+        echo "调试版静态库: ${LIB_DIR}/${DEBUG_LIB_FILE}"
+    fi
+fi
+
+if [ "$BUILD_SHARED" = true ]; then
+    if [ "$BUILD_RELEASE" = true ]; then
+        echo "发布版动态库: ${LIB_DIR}/${SHARED_LIB_FILE}"
+    fi
+    if [ "$BUILD_DEBUG" = true ]; then
+        echo "调试版动态库: ${LIB_DIR}/${SHARED_DEBUG_LIB_FILE}"
+    fi
+fi
+
+# 使用方法信息
+echo -e "\n使用方法:"
+echo "#include \"${HEADER_FILE}\""
+
+if [ "$BUILD_STATIC" = true ] && [ "$BUILD_SHARED" = true ]; then
+    echo "静态链接: -lyaml (发布版) 或 -lyaml-debug (调试版)"
+    echo "动态链接: -lyaml (发布版) 或 -lyaml-debug (调试版) (需设置LD_LIBRARY_PATH)"
+elif [ "$BUILD_STATIC" = true ]; then
+    echo "链接: -lyaml (发布版) 或 -lyaml-debug (调试版)"
+elif [ "$BUILD_SHARED" = true ]; then
+    echo "链接: -lyaml (发布版) 或 -lyaml-debug (调试版) (需设置LD_LIBRARY_PATH)"
 fi
