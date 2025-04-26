@@ -60,6 +60,14 @@ echo "// 构建日期: ${BUILD_DATE}" >> "$OUT"
 echo "// 构建系统: ${BUILD_OS}" >> "$OUT"
 echo "// 此文件包含所有 yaml-cpp 头文件和实现，可独立使用无需链接静态库" >> "$OUT"
 echo "#pragma once" >> "$OUT"
+echo "" >> "$OUT"
+echo "#ifndef YAML_CPP_AMALGAMATED_HPP" >> "$OUT"
+echo "#define YAML_CPP_AMALGAMATED_HPP" >> "$OUT"
+echo "" >> "$OUT"
+echo "// 防止实现部分被多次包含" >> "$OUT"
+echo "#ifndef YAML_CPP_IMPLEMENTATION" >> "$OUT"
+echo "#define YAML_CPP_IMPLEMENTATION" >> "$OUT"
+echo "#endif" >> "$OUT"
 
 # 记录已处理文件，避免重复递归
 declare -A included
@@ -150,6 +158,10 @@ fi
 
 # 再展开源码实现文件
 echo -e "\n// ====== IMPLEMENTATION ======" >> "$OUT"
+echo "// 源码实现部分 - 使用 #ifdef YAML_CPP_IMPLEMENTATION 保护，防止多次定义" >> "$OUT"
+echo "#ifdef YAML_CPP_IMPLEMENTATION" >> "$OUT"
+echo "// 在这里实现一次，之后都会被宏保护" >> "$OUT"
+echo "#define YAML_CPP_IMPLEMENTATION_INCLUDED" >> "$OUT"
 echo "正在加入源码实现..."
 find ${YAML_SRC}/src -type f -name "*.cpp" | sort | while read f; do
     # 跳过测试和 main 函数文件
@@ -160,6 +172,8 @@ find ${YAML_SRC}/src -type f -name "*.cpp" | sort | while read f; do
     echo "处理源文件: $f"
     expand_file "$f"
 done
+echo "#endif // YAML_CPP_IMPLEMENTATION" >> "$OUT"
+echo "#endif // YAML_CPP_AMALGAMATED_HPP" >> "$OUT"
 
 echo "已生成单头文件: $OUT"
 echo "检查是否仍有未能展开的 include:"
@@ -173,3 +187,4 @@ cp "${OUT}" "${INCLUDE_DIR}/${ALL_HEADER}"
 echo "===== 生成完成 ====="
 echo "全合并头文件: ${INCLUDE_DIR}/${ALL_HEADER}"
 echo "使用方法: #include \"${ALL_HEADER}\" (无需链接静态库)"
+echo "注意：只在一个源文件中定义 YAML_CPP_IMPLEMENTATION 再包含此头文件"

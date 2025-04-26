@@ -47,68 +47,111 @@ check-repo :
 # 生成合并单头文件（使用make_yaml_all.sh脚本）
 .PHONY : merged-header
 merged-header : check-repo
-	@echo "使用脚本生成全合并版本YAML-CPP单头文件..."
-	@chmod +x $(SCRIPTS_DIR)/make_yaml_all.sh
-	@YAML_SRC=$(YAML_SRC) INCLUDE_DIR=$(INCLUDE_DIR) TEMP_DIR=$(TEMP_DIR) $(SCRIPTS_DIR)/make_yaml_all.sh
+	@if [ ! -f "$(INCLUDE_DIR)/$(MERGED_HEADER)" ]; then \
+		echo "使用脚本生成全合并版本YAML-CPP单头文件..."; \
+		chmod +x $(SCRIPTS_DIR)/make_yaml_all.sh; \
+		YAML_SRC=$(YAML_SRC) INCLUDE_DIR=$(INCLUDE_DIR) TEMP_DIR=$(TEMP_DIR) $(SCRIPTS_DIR)/make_yaml_all.sh; \
+	else \
+		echo "合并单头文件已存在，跳过构建..."; \
+	fi
 
 # ====== 静态库版构建目标 ======
 
 # 构建静态库（仅发布版，使用make_yaml_header.sh脚本并传递--only-release参数）
 .PHONY : static-lib
 static-lib : check-repo
-	@echo "使用脚本生成YAML-CPP头文件和静态库（仅发布版）..."
-	@chmod +x $(SCRIPTS_DIR)/make_yaml_header.sh
-	@YAML_SRC=$(YAML_SRC) INCLUDE_DIR=$(INCLUDE_DIR) LIB_DIR=$(LIB_DIR) TEMP_DIR=$(TEMP_DIR) $(SCRIPTS_DIR)/make_yaml_header.sh --only-release --only-static
+	@if [ ! -f "$(LIB_DIR)/$(STATIC_LIB_RELEASE)" ] || [ ! -f "$(INCLUDE_DIR)/$(HEADER_ONLY)" ]; then \
+		echo "使用脚本生成YAML-CPP头文件和静态库（仅发布版）..."; \
+		chmod +x $(SCRIPTS_DIR)/make_yaml_header.sh; \
+		YAML_SRC=$(YAML_SRC) INCLUDE_DIR=$(INCLUDE_DIR) LIB_DIR=$(LIB_DIR) TEMP_DIR=$(TEMP_DIR) $(SCRIPTS_DIR)/make_yaml_header.sh --only-release --only-static; \
+	else \
+		echo "发布版静态库和头文件已存在，跳过构建..."; \
+	fi
 
 # 构建静态库（仅调试版，使用make_yaml_header.sh脚本并传递--only-debug参数）
 .PHONY : static-lib-debug
 static-lib-debug : check-repo
-	@echo "使用脚本生成YAML-CPP头文件和静态库（仅调试版）..."
-	@chmod +x $(SCRIPTS_DIR)/make_yaml_header.sh
-	@YAML_SRC=$(YAML_SRC) INCLUDE_DIR=$(INCLUDE_DIR) LIB_DIR=$(LIB_DIR) TEMP_DIR=$(TEMP_DIR) $(SCRIPTS_DIR)/make_yaml_header.sh --only-debug --only-static
+	@if [ ! -f "$(LIB_DIR)/$(STATIC_LIB_DEBUG)" ] || [ ! -f "$(INCLUDE_DIR)/$(HEADER_ONLY)" ]; then \
+		echo "使用脚本生成YAML-CPP头文件和静态库（仅调试版）..."; \
+		chmod +x $(SCRIPTS_DIR)/make_yaml_header.sh; \
+		YAML_SRC=$(YAML_SRC) INCLUDE_DIR=$(INCLUDE_DIR) LIB_DIR=$(LIB_DIR) TEMP_DIR=$(TEMP_DIR) $(SCRIPTS_DIR)/make_yaml_header.sh --only-debug --only-static; \
+	else \
+		echo "调试版静态库和头文件已存在，跳过构建..."; \
+	fi
 
 # 构建所有静态库版本（同时构建发布版和调试版）
 .PHONY : static-lib-all
 static-lib-all : check-repo
-	@echo "使用脚本生成YAML-CPP头文件和静态库（发布版和调试版）..."
-	@chmod +x $(SCRIPTS_DIR)/make_yaml_header.sh
-	@YAML_SRC=$(YAML_SRC) INCLUDE_DIR=$(INCLUDE_DIR) LIB_DIR=$(LIB_DIR) TEMP_DIR=$(TEMP_DIR) $(SCRIPTS_DIR)/make_yaml_header.sh --all --only-static
+	@if [ ! -f "$(LIB_DIR)/$(STATIC_LIB_RELEASE)" ] || [ ! -f "$(LIB_DIR)/$(STATIC_LIB_DEBUG)" ] || [ ! -f "$(INCLUDE_DIR)/$(HEADER_ONLY)" ]; then \
+		echo "使用脚本生成YAML-CPP头文件和静态库（发布版和调试版）..."; \
+		chmod +x $(SCRIPTS_DIR)/make_yaml_header.sh; \
+		YAML_SRC=$(YAML_SRC) INCLUDE_DIR=$(INCLUDE_DIR) LIB_DIR=$(LIB_DIR) TEMP_DIR=$(TEMP_DIR) $(SCRIPTS_DIR)/make_yaml_header.sh --all --only-static; \
+	else \
+		echo "所有静态库版本和头文件已存在，跳过构建..."; \
+	fi
 
 # ====== 动态库版构建目标 ======
 
 # 构建动态库（仅发布版）
 .PHONY : shared-lib
 shared-lib : check-repo
-	@echo "使用脚本生成YAML-CPP头文件和动态库（仅发布版）..."
-	@chmod +x $(SCRIPTS_DIR)/make_yaml_header.sh
-	@YAML_SRC=$(YAML_SRC) INCLUDE_DIR=$(INCLUDE_DIR) LIB_DIR=$(LIB_DIR) TEMP_DIR=$(TEMP_DIR) $(SCRIPTS_DIR)/make_yaml_header.sh --only-release --only-shared
+	@if [ ! -f "$(LIB_DIR)/$(SHARED_LIB_RELEASE)" ] || [ ! -f "$(INCLUDE_DIR)/$(HEADER_ONLY)" ]; then \
+		echo "使用脚本生成YAML-CPP头文件和动态库（仅发布版）..."; \
+		chmod +x $(SCRIPTS_DIR)/make_yaml_header.sh; \
+		YAML_SRC=$(YAML_SRC) INCLUDE_DIR=$(INCLUDE_DIR) LIB_DIR=$(LIB_DIR) TEMP_DIR=$(TEMP_DIR) $(SCRIPTS_DIR)/make_yaml_header.sh --only-release --only-shared; \
+	else \
+		echo "发布版动态库和头文件已存在，跳过构建..."; \
+	fi
 
 # 构建动态库（仅调试版）
 .PHONY : shared-lib-debug
 shared-lib-debug : check-repo
-	@echo "使用脚本生成YAML-CPP头文件和动态库（仅调试版）..."
-	@chmod +x $(SCRIPTS_DIR)/make_yaml_header.sh
-	@YAML_SRC=$(YAML_SRC) INCLUDE_DIR=$(INCLUDE_DIR) LIB_DIR=$(LIB_DIR) TEMP_DIR=$(TEMP_DIR) $(SCRIPTS_DIR)/make_yaml_header.sh --only-debug --only-shared
+	@if [ ! -f "$(LIB_DIR)/$(SHARED_LIB_DEBUG)" ] || [ ! -f "$(INCLUDE_DIR)/$(HEADER_ONLY)" ]; then \
+		echo "使用脚本生成YAML-CPP头文件和动态库（仅调试版）..."; \
+		chmod +x $(SCRIPTS_DIR)/make_yaml_header.sh; \
+		YAML_SRC=$(YAML_SRC) INCLUDE_DIR=$(INCLUDE_DIR) LIB_DIR=$(LIB_DIR) TEMP_DIR=$(TEMP_DIR) $(SCRIPTS_DIR)/make_yaml_header.sh --only-debug --only-shared; \
+	else \
+		echo "调试版动态库和头文件已存在，跳过构建..."; \
+	fi
 
 # 构建所有动态库版本（同时构建发布版和调试版）
 .PHONY : shared-lib-all
 shared-lib-all : check-repo
-	@echo "使用脚本生成YAML-CPP头文件和动态库（发布版和调试版）..."
-	@chmod +x $(SCRIPTS_DIR)/make_yaml_header.sh
-	@YAML_SRC=$(YAML_SRC) INCLUDE_DIR=$(INCLUDE_DIR) LIB_DIR=$(LIB_DIR) TEMP_DIR=$(TEMP_DIR) $(SCRIPTS_DIR)/make_yaml_header.sh --all --only-shared
+	@if [ ! -f "$(LIB_DIR)/$(SHARED_LIB_RELEASE)" ] || [ ! -f "$(LIB_DIR)/$(SHARED_LIB_DEBUG)" ] || [ ! -f "$(INCLUDE_DIR)/$(HEADER_ONLY)" ]; then \
+		echo "使用脚本生成YAML-CPP头文件和动态库（发布版和调试版）..."; \
+		chmod +x $(SCRIPTS_DIR)/make_yaml_header.sh; \
+		YAML_SRC=$(YAML_SRC) INCLUDE_DIR=$(INCLUDE_DIR) LIB_DIR=$(LIB_DIR) TEMP_DIR=$(TEMP_DIR) $(SCRIPTS_DIR)/make_yaml_header.sh --all --only-shared; \
+	else \
+		echo "所有动态库版本和头文件已存在，跳过构建..."; \
+	fi
 
 # ====== 组合目标 ======
 
 # 构建所有静态库和动态库版本
 .PHONY : lib-all
 lib-all : check-repo
-	@echo "使用脚本生成YAML-CPP头文件和所有库（静态和动态，发布版和调试版）..."
-	@chmod +x $(SCRIPTS_DIR)/make_yaml_header.sh
-	@YAML_SRC=$(YAML_SRC) INCLUDE_DIR=$(INCLUDE_DIR) LIB_DIR=$(LIB_DIR) TEMP_DIR=$(TEMP_DIR) $(SCRIPTS_DIR)/make_yaml_header.sh --all --all-types
+	@if [ ! -f "$(LIB_DIR)/$(STATIC_LIB_RELEASE)" ] || [ ! -f "$(LIB_DIR)/$(STATIC_LIB_DEBUG)" ] || \
+	   [ ! -f "$(LIB_DIR)/$(SHARED_LIB_RELEASE)" ] || [ ! -f "$(LIB_DIR)/$(SHARED_LIB_DEBUG)" ] || \
+	   [ ! -f "$(INCLUDE_DIR)/$(HEADER_ONLY)" ]; then \
+		echo "使用脚本生成YAML-CPP头文件和所有库（静态和动态，发布版和调试版）..."; \
+		chmod +x $(SCRIPTS_DIR)/make_yaml_header.sh; \
+		YAML_SRC=$(YAML_SRC) INCLUDE_DIR=$(INCLUDE_DIR) LIB_DIR=$(LIB_DIR) TEMP_DIR=$(TEMP_DIR) $(SCRIPTS_DIR)/make_yaml_header.sh --all --all-types; \
+	else \
+		echo "所有静态库和动态库版本和头文件已存在，跳过构建..."; \
+	fi
 
 # 构建所有类型的库和头文件
 .PHONY : all
-all : merged-header lib-all
+all : check-repo
+	@if [ ! -f "$(INCLUDE_DIR)/$(MERGED_HEADER)" ] || [ ! -f "$(LIB_DIR)/$(STATIC_LIB_RELEASE)" ] || \
+	   [ ! -f "$(LIB_DIR)/$(STATIC_LIB_DEBUG)" ] || [ ! -f "$(LIB_DIR)/$(SHARED_LIB_RELEASE)" ] || \
+	   [ ! -f "$(LIB_DIR)/$(SHARED_LIB_DEBUG)" ] || [ ! -f "$(INCLUDE_DIR)/$(HEADER_ONLY)" ]; then \
+		echo "正在构建所有版本的YAML-CPP库和头文件..."; \
+		$(MAKE) merged-header; \
+		$(MAKE) lib-all; \
+	else \
+		echo "所有YAML-CPP库和头文件已存在，跳过构建..."; \
+	fi
 
 # ====== 清理目标 ======
 
