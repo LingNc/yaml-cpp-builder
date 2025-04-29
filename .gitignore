@@ -14,5 +14,6 @@
 # !lib/*.a
 
 !tests/*.cpp
+!tests/*/*.*
 
 yaml-cpp/

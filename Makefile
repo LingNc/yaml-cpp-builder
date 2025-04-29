@@ -257,6 +257,7 @@ help :
 	@echo ""
 	@echo "测试目标："
 	@echo "  make test-merged      - 测试YAML-CPP合并单头文件版本"
+	@echo "  make test-multi    - 测试YAML-CPP多文件编译的合并单头文件版本"
 	@echo "  make test-static      - 测试YAML-CPP静态库版本（发布版）"
 	@echo "  make test-static-debug - 测试YAML-CPP静态库版本（调试版）"
 	@echo "  make test-shared      - 测试YAML-CPP动态库版本（发布版）"
@@ -304,16 +305,20 @@ $(shell mkdir -p $(TEST_BUILD_DIR))
 
 # 测试单头文件版
 .PHONY : test-merged
-test-merged :
-	@if [ ! -f "$(INCLUDE_DIR)/$(MERGED_HEADER)" ]; then \
-		echo "合并单头文件不存在，需要先构建..."; \
-		$(MAKE) merged-header; \
-	else \
-		echo "使用已存在的合并单头文件，跳过构建..."; \
-	fi
+test-merged : merged-header
 	@echo "编译并运行单头文件测试程序..."
 	$(CXX) $(CXXFLAGS_RELEASE) -DUSE_MERGED_HEADER $(DIRECT_TEST_SRC) -o $(TEST_BUILD_DIR)/$(DIRECT_TEST)_merged
 	@$(TEST_BUILD_DIR)/$(DIRECT_TEST)_merged
+
+# 在测试单头文件版之后添加多文件编译测试
+.PHONY: test-multi
+# 测试多文件编译合并单头文件版本
+test-multi : merged-header
+	@echo "编译并运行多文件TU测试程序..."
+	$(CXX) $(CXXFLAGS_RELEASE) -DUSE_MERGED_HEADER \
+		$(TESTS_DIR)/multi_tu_test1.cpp $(TESTS_DIR)/multi_tu_test2.cpp $(TESTS_DIR)/multi_tu_main.cpp \
+		-o $(TEST_BUILD_DIR)/multi_tu_test
+	@$(TEST_BUILD_DIR)/multi_tu_test
 
 # 测试静态库版（发布版）
 .PHONY : test-static

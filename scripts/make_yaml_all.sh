@@ -180,6 +180,10 @@ echo "检查是否仍有未能展开的 include:"
 # 使用 || true 避免 grep 返回非零导致脚本退出
 grep -n "Cannot find include" "$OUT" || echo "全部 include 展开成功!"
 
+# 添加 inline 修饰，避免多文件包含造成重复定义
+echo "添加 inline 修饰..."
+sed -i '/^[[:space:]]*inline /! {/^[[:alnum:]_].*).*{/ s/^/inline /}' "$OUT"
+
 # 复制到目标目录
 echo "正在复制到目标位置..."
 cp "${OUT}" "${INCLUDE_DIR}/${ALL_HEADER}"
