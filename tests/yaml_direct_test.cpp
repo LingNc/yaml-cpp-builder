@@ -4,6 +4,7 @@
 // 根据构建方式选择正确的头文件
 #ifdef USE_MERGED_HEADER
 // 使用合并单头文件版本
+#   define YAML_CPP_IMPLEMENTATION  // 定义此宏以包含实现部分
 #   include "../include/yaml-cpp.hpp"
 #else
 // 使用静态库版本

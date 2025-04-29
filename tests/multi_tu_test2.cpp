@@ -1,4 +1,4 @@
-#define USE_MERGED_HEADER
+// #define USE_MERGED_HEADER
 #include "../include/yaml-cpp.hpp"
 
 int get_value2() {

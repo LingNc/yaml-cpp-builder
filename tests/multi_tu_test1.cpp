@@ -1,4 +1,5 @@
-#define USE_MERGED_HEADER
+// #define USE_MERGED_HEADER
+#define YAML_CPP_IMPLEMENTATION  // 添加此宏以包含实现部分
 #include "../include/yaml-cpp.hpp"
 
 int get_value1() {

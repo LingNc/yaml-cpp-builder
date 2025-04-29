@@ -64,10 +64,17 @@ echo "" >> "$OUT"
 echo "#ifndef YAML_CPP_AMALGAMATED_HPP" >> "$OUT"
 echo "#define YAML_CPP_AMALGAMATED_HPP" >> "$OUT"
 echo "" >> "$OUT"
-echo "// 防止实现部分被多次包含" >> "$OUT"
-echo "#ifndef YAML_CPP_IMPLEMENTATION" >> "$OUT"
-echo "#define YAML_CPP_IMPLEMENTATION" >> "$OUT"
-echo "#endif" >> "$OUT"
+echo "// 使用方法说明" >> "$OUT"
+echo "// 1. 在所有包含此头文件的地方都引入头文件部分" >> "$OUT"
+echo "// 2. 在有且只有一个源文件中，定义 YAML_CPP_IMPLEMENTATION 再包含此头文件" >> "$OUT"
+echo "// 例如:" >> "$OUT"
+echo "// // 在 .h 文件或多个 .cpp 文件中:" >> "$OUT"
+echo "// #include \"yaml-cpp.hpp\"" >> "$OUT"
+echo "// " >> "$OUT"
+echo "// // 在有且只有一个 .cpp 文件中:" >> "$OUT"
+echo "// #define YAML_CPP_IMPLEMENTATION" >> "$OUT"
+echo "// #include \"yaml-cpp.hpp\"" >> "$OUT"
+echo "" >> "$OUT"
 
 # 记录已处理文件，避免重复递归
 declare -A included
@@ -161,6 +168,7 @@ echo -e "\n// ====== IMPLEMENTATION ======" >> "$OUT"
 echo "// 源码实现部分 - 使用 #ifdef YAML_CPP_IMPLEMENTATION 保护，防止多次定义" >> "$OUT"
 echo "#ifdef YAML_CPP_IMPLEMENTATION" >> "$OUT"
 echo "// 在这里实现一次，之后都会被宏保护" >> "$OUT"
+echo "#ifndef YAML_CPP_IMPLEMENTATION_INCLUDED" >> "$OUT"
 echo "#define YAML_CPP_IMPLEMENTATION_INCLUDED" >> "$OUT"
 echo "正在加入源码实现..."
 find ${YAML_SRC}/src -type f -name "*.cpp" | sort | while read f; do
@@ -172,6 +180,7 @@ find ${YAML_SRC}/src -type f -name "*.cpp" | sort | while read f; do
     echo "处理源文件: $f"
     expand_file "$f"
 done
+echo "#endif // YAML_CPP_IMPLEMENTATION_INCLUDED" >> "$OUT"
 echo "#endif // YAML_CPP_IMPLEMENTATION" >> "$OUT"
 echo "#endif // YAML_CPP_AMALGAMATED_HPP" >> "$OUT"
 
@@ -180,15 +189,19 @@ echo "检查是否仍有未能展开的 include:"
 # 使用 || true 避免 grep 返回非零导致脚本退出
 grep -n "Cannot find include" "$OUT" || echo "全部 include 展开成功!"
 
-# 添加 inline 修饰，避免多文件包含造成重复定义
-echo "添加 inline 修饰..."
-sed -i '/^[[:space:]]*inline /! {/^[[:alnum:]_].*).*{/ s/^/inline /}' "$OUT"
-
 # 复制到目标目录
 echo "正在复制到目标位置..."
 cp "${OUT}" "${INCLUDE_DIR}/${ALL_HEADER}"
 
 echo "===== 生成完成 ====="
-echo "全合并头文件: ${INCLUDE_DIR}/${ALL_HEADER}"
-echo "使用方法: #include \"${ALL_HEADER}\" (无需链接静态库)"
-echo "注意：只在一个源文件中定义 YAML_CPP_IMPLEMENTATION 再包含此头文件"
+echo "合并头文件: ${OUT}"
+echo "已复制到: ${INCLUDE_DIR}/${ALL_HEADER}"
+echo "使用方法:"
+echo "1. 在所有需要使用 YAML-CPP 的文件中:"
+echo "   #include \"${ALL_HEADER}\""
+echo ""
+echo "2. 在有且只有一个源文件中添加以下代码:"
+echo "   #define YAML_CPP_IMPLEMENTATION"
+echo "   #include \"${ALL_HEADER}\""
+echo ""
+echo "这种方式类似于 stb 单头文件库，可以避免多次定义问题"
