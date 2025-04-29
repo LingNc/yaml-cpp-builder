@@ -11,7 +11,7 @@
 #### 单头文件版本
 适用于快速集成和简单项目
 
-  - **yaml-cpp.hpp** - 合并所有依赖的单头文件版本，使用时只需包含此文件
+  - **yaml-cpp.hpp** - 合并所有依赖的单头文件版本，使用时只需包含此文件，采用 stb 风格设计
 
 
 #### 静态库版本（也可以使用动态库）
@@ -24,7 +24,7 @@
 
 ## 功能特点
 
-- 生成全合并版单头文件 - 包含所有实现，只需包含一个文件，无需链接库
+- 生成全合并版单头文件 - 只需包含一个文件，无需链接库（STB风格）
 - 生成纯头文件版 + 静态库 - 更灵活的使用方式，可单独更新库文件
 - 提供发布版和调试版静态库
 - 简单易用的构建系统
@@ -83,7 +83,7 @@ make clean
 **功能：** 生成纯头文件版 yaml-cpp 及其静态库
 
 **生成文件：**
-- `ext/yaml.hpp` - 合并后的单头文件（只包含声明）
+- `include/yaml.hpp` - 合并后的单头文件（只包含声明）
 - `lib/libyaml.a` - 编译好的静态库
 - `lib/libyaml-debug.a` - 编译好的调试版静态库
 
@@ -98,7 +98,7 @@ chmod +x scripts/make_yaml_header.sh
 #include "yaml.hpp"  // 在 include 目录中
 
 // 编译时需链接静态库
-// g++ your_file.cpp -o your_program -Iext -Llib -lyaml
+// g++ your_file.cpp -o your_program -Iinclude -Llib -lyaml
 ```
 
 **适用场景：**
@@ -108,10 +108,10 @@ chmod +x scripts/make_yaml_header.sh
 
 #### 2. make_yaml_all.sh
 
-**功能：** 生成全合并版 yaml-cpp 单头文件（包含所有实现，无需链接库）
+**功能：** 生成全合并版 yaml-cpp 单头文件（采用 stb 风格设计，一次定义多处包含）
 
 **生成文件：**
-- `ext/yaml-cpp.hpp` - 最终合并文件（包含所有声明和实现）
+- `include/yaml-cpp.hpp` - 最终合并文件（包含所有声明和实现）
 
 **使用方法：**
 ```bash
@@ -121,16 +121,21 @@ chmod +x scripts/make_yaml_all.sh
 
 **在项目中使用：**
 ```cpp
+// 在所有需要使用 YAML-CPP 的文件中：
 #include "yaml-cpp.hpp"  // 在 include 目录中
 
-// 无需链接额外的库
-// g++ your_file.cpp -o your_program -Iext
+// 在且仅在一个源文件中添加：
+#define YAML_CPP_IMPLEMENTATION
+#include "yaml-cpp.hpp"
+
+// 编译时无需链接额外的库
+// g++ your_file.cpp -o your_program -Iinclude
 ```
 
 **适用场景：**
 - 希望简化依赖，只需一个文件
 - 项目移植、分发方便
-- 不关心编译速度
+- 多文件项目中使用统一的 YAML 处理功能
 
 ## 安装
 
@@ -174,21 +179,23 @@ sudo ./install.sh
 
 1. 脚本执行时会自动创建所需目录
 2. 对于 `make_yaml_header.sh`：
-   - 头文件 `yaml.hpp` 存放在 `ext` 目录
+   - 头文件 `yaml.hpp` 存放在 `include` 目录
    - 静态库 `libyaml.a` 存放在 `lib` 目录
    - 使用时需要同时包含头文件并链接静态库
 3. 对于 `make_yaml_all.sh`：
-   - 合并后的头文件 `yaml-cpp.hpp` 仅存放在 `ext` 目录
+   - 合并后的头文件 `yaml-cpp.hpp` 存放在 `include` 目录
+   - 使用 stb 风格设计，在所有文件中包含头文件，但只在一个源文件中定义 `YAML_CPP_IMPLEMENTATION`
    - 使用时只需包含该头文件，无需链接任何库
 4. 如果使用 CMake，可以在 CMakeLists.txt 中配置：
    ```cmake
    # 使用 yaml.hpp + 静态库
-   include_directories(ext)
+   include_directories(include)
    link_directories(lib)
    target_link_libraries(your_target yaml)
 
    # 或使用全合并版
-   include_directories(ext)
+   include_directories(include)
+   # 在一个源文件中定义 YAML_CPP_IMPLEMENTATION
    # 无需链接库
    ```
 
@@ -199,6 +206,9 @@ sudo ./install.sh
 ```bash
 # 测试合并单头文件版本
 make test-merged
+
+# 测试合并单头文件版本的多文件编译
+make test-multi
 
 # 测试静态库版本（发布版）
 make test-static

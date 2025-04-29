@@ -257,7 +257,7 @@ help :
 	@echo ""
 	@echo "测试目标："
 	@echo "  make test-merged      - 测试YAML-CPP合并单头文件版本"
-	@echo "  make test-multi    - 测试YAML-CPP多文件编译的合并单头文件版本"
+	@echo "  make test-multi       - 测试YAML-CPP多文件编译的合并单头文件版本"
 	@echo "  make test-static      - 测试YAML-CPP静态库版本（发布版）"
 	@echo "  make test-static-debug - 测试YAML-CPP静态库版本（调试版）"
 	@echo "  make test-shared      - 测试YAML-CPP动态库版本（发布版）"
